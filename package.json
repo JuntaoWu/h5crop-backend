@@ -6,7 +6,7 @@
         "server": "npm run build:server && npm run start:server",
         "debug": "node inspect ./dist/bin/www",
         "start:server": "node ./dist/server/bin/www",
-        "start": "concurrently \"npm run build:server && npm run start:server\"",
+        "start": "npm run start:server",
         "build": "concurrently \"npm run build:server\"",
         "build:server": "tsc -p ./tsconfig.server.json",
         "build:prod": "npm run build:server"

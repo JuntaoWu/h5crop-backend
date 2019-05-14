@@ -41,7 +41,7 @@ const localWxLogin = new LocalStrategy(localWxOptions, async (username, password
         return null;
     });
 
-    if (user && user.wxOpenId) {
+    if (user && user.openId) {
         return done(null, user);
     }
 

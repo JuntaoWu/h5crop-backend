@@ -54,19 +54,6 @@ server.on("listening", () => {
     onListening(server);
 });
 
-if (config.env == "production") {
-    let options = {
-        key: fs.readFileSync("/etc/letsencrypt/live/gdjzj.hzsdgames.com/privkey.pem"),
-        cert: fs.readFileSync("/etc/letsencrypt/live/gdjzj.hzsdgames.com/fullchain.pem"),
-    };
-    let sslServer = https.createServer(options, app);
-    sslServer.listen(config.sslPort);
-    sslServer.on("error", onError);
-    sslServer.on("listening", () => {
-        onListening(sslServer);
-    });
-}
-
 /**
  * Normalize a port into a number, string, or false.
  */

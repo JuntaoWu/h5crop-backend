@@ -15,7 +15,10 @@ export let login = async (req: Request, res: Response, next: NextFunction) => {
             openId: req.user.openId,
         });
 
+        console.log("dbUser", dbUser);
+
         if (!dbUser) {
+            console.log("req.user", req.user);
             dbUser = new WxUserModel(req.user);
             await dbUser.save();
         }
@@ -71,7 +74,9 @@ export let increase = async (req, res, next) => {
                 if (error) {
                     return next(error);
                 }
-                user.indexes.push(+counter.seq);
+                user.indexes = user.indexes.concat(+counter.seq);
+
+                console.log(user.indexes);
 
                 await user.save();
 
