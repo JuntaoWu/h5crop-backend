@@ -6,7 +6,8 @@ import WxUserModel, { WxUser } from '../models/wxuser.model';
 import CounterModel from '../models/counter.model';
 
 export let authorize = (req, res, next) => {
-    return res.redirect(`https://open.weixin.qq.com/connect/oauth2/authorize?appid=${config.wx.appId}&redirect_uri=${config.wx.redirectUrl}&response_type=code&scope=snsapi_userinfo&state=${encodeURIComponent(req.query.state)}#wechat_redirect`);
+    const scope = 'snsapi_base';
+    return res.redirect(`https://open.weixin.qq.com/connect/oauth2/authorize?appid=${config.wx.appId}&redirect_uri=${config.wx.redirectUrl}&response_type=code&scope=${scope}&state=${encodeURIComponent(req.query.state)}#wechat_redirect`);
 };
 
 export let login = async (req: Request, res: Response, next: NextFunction) => {

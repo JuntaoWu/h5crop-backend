@@ -36,10 +36,14 @@ const localWxLogin = new LocalStrategy(localWxOptions, async (username, password
         return done(null, false);
     }
 
-    let user = await getWxUserInfoAsync(access_token, openid).catch(error => {
-        console.error(error);
-        return null;
-    });
+    let user = {
+        openId: openid
+    };
+
+    // let user = await getWxUserInfoAsync(access_token, openid).catch(error => {
+    //     console.error(error);
+    //     return null;
+    // });
 
     if (user && user.openId) {
         return done(null, user);
