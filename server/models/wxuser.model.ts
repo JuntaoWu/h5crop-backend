@@ -28,6 +28,10 @@ export class WxUser extends Typegoose {
     @prop()
     openId: String;
     @prop()
+    name: String;
+    @prop()
+    screenShotImg: String;
+    @prop()
     unionId: String;
     @prop()
     session_key: String;

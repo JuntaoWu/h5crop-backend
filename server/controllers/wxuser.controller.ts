@@ -5,6 +5,9 @@ import APIError from "../helpers/APIError";
 import WxUserModel, { WxUser } from '../models/wxuser.model';
 import CounterModel from '../models/counter.model';
 
+import * as fs from 'fs';
+import * as path from 'path';
+
 export let authorize = (req, res, next) => {
     const scope = 'snsapi_base';
     return res.redirect(`https://open.weixin.qq.com/connect/oauth2/authorize?appid=${config.wx.appId}&redirect_uri=${config.wx.redirectUrl}&response_type=code&scope=${scope}&state=${encodeURIComponent(req.query.state)}#wechat_redirect`);
@@ -50,10 +53,11 @@ export let increase = async (req, res, next) => {
     });
 
     if (!user) {
-        return res.json({
-            code: 404,
-            message: "user not found"
+
+        user = new WxUserModel({
+            openId: req.query.wxOpenId,
         });
+        await user.save();
     }
 
     if (user.indexes && user.indexes.length >= 3) {
@@ -91,4 +95,50 @@ export let increase = async (req, res, next) => {
     }
 };
 
-export default { authorize, login, increase };
+export let upload = async (req, res, next) => {
+    let user = await WxUserModel.findOne({
+        openId: req.query.wxOpenId
+    });
+
+    if (!user) {
+        return res.json({
+            code: 404,
+            message: "user not found"
+        });
+    }
+
+    user.name = req.body.name;
+    user.screenShotImg = await writeImage(req.body.screenShotImg, req.query.wxOpenId);
+
+    await user.save();
+
+    return res.json({
+        code: 0,
+        data: user
+    });
+};
+
+function writeImage(dataUri: string, openId: string): Promise<string> {
+    if (!dataUri) {
+        return;
+    }
+
+    const base64String = dataUri.match(/data:(.*);base64,(.*)/)[2];
+
+    const avatar = Buffer.from(base64String, "base64");
+    // const fileName = `/static/screenshots/${openId}-${+new Date()}.jpg`;
+    const fileName = `/static/screenshots/${openId}-${+new Date()}.jpg`;
+
+    return new Promise((resolve, reject) => {
+        fs.writeFile(path.join(__dirname, `../../..${fileName}`), avatar, (err) => {
+            if (err) {
+                return reject(err);
+            }
+            else {
+                return resolve(fileName);
+            }
+        });
+    });
+}
+
+export default { authorize, login, increase, upload };

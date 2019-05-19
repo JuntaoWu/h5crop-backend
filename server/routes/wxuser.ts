@@ -17,4 +17,7 @@ router.route('/login')
 router.route('/increase')
     .post(wxuserCtrl.increase);
 
+router.route('/upload')
+    .post(wxuserCtrl.upload);
+
 export default router;
