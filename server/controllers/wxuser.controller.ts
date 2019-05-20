@@ -141,4 +141,23 @@ function writeImage(dataUri: string, openId: string): Promise<string> {
     });
 }
 
-export default { authorize, login, increase, upload };
+export let list = async (req, res, next) => {
+    const { skip = 0, limit = 100 } = req.query;
+    const data = await WxUserModel.find().skip(+skip).limit(+limit);
+    return res.json({
+        code: 0,
+        data: data.map(item => {
+            const indexes = item.indexes || [];
+            return {
+                userId: item.userId,
+                number1: indexes[0] || "",
+                number2: indexes[1] || "",
+                number3: indexes[2] || "",
+                name: item.name,
+                screenShotImg: item.screenShotImg
+            };
+        })
+    });
+};
+
+export default { authorize, login, increase, upload, list };
