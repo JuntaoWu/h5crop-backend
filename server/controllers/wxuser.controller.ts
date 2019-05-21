@@ -1,7 +1,7 @@
-import config from "../config/config";
+import config from '../config/config';
 import * as jwt from 'jsonwebtoken';
-import { Request, Response, NextFunction } from "express";
-import APIError from "../helpers/APIError";
+import { Request, Response, NextFunction } from 'express';
+import APIError from '../helpers/APIError';
 import WxUserModel, { WxUser } from '../models/wxuser.model';
 import CounterModel from '../models/counter.model';
 import * as Excel from 'exceljs';
@@ -16,15 +16,14 @@ export let authorize = (req, res, next) => {
 };
 
 export let login = async (req: Request, res: Response, next: NextFunction) => {
-    if (req.user) {
+
+    try {
         let dbUser = await WxUserModel.findOne({
             openId: req.user.openId,
         });
 
-        console.log("dbUser", dbUser);
-
         if (!dbUser) {
-            console.log("req.user", req.user);
+            console.log('req.user', req.user);
             dbUser = new WxUserModel(req.user);
             await dbUser.save();
         }
@@ -41,105 +40,118 @@ export let login = async (req: Request, res: Response, next: NextFunction) => {
         else {
             redirectUrl += `?wxOpenId=${req.user.openId}`;
         }
+
         console.log('redirectTo:', redirectUrl);
         return res.redirect(redirectUrl);
     }
-
-    const error = new APIError("Cannot resolve user info", 401);
-    return next(error);
+    catch (err) {
+        console.error('Login failed,', err);
+        return next(err);
+    }
 };
 
 export let increase = async (req, res, next) => {
-    let user = await WxUserModel.findOne({
-        openId: req.query.wxOpenId
-    });
 
-    if (!user) {
-
-        user = new WxUserModel({
-            openId: req.query.wxOpenId,
+    try {
+        let user = await WxUserModel.findOne({
+            openId: req.query.wxOpenId
         });
-        await user.save();
-    }
 
-    if (user.indexes && user.indexes.length >= 3) {
-        return res.json({
-            code: 0,
-            data: {
-                total: user.indexes[2]
-            }
-        });
-    }
-    else {
-        user.indexes = user.indexes || [];
-
-        CounterModel.findOneAndUpdate(
-            { seqName: "StarIndex" },
-            { $inc: { seq: 1 } },
-            { upsert: true, new: true, setDefaultsOnInsert: true },
-            async (error, counter) => {
-                if (error) {
-                    return next(error);
-                }
-                user.indexes = user.indexes.concat(+counter.seq);
-
-                console.log(user.indexes);
-
-                const savedUser = await user.save({
-                    validateBeforeSave: true
-                }, (err, doc) => {
-                    if (err) {
-                        return next(err);
-                    }
-                }).catch(err => {
-                    if (err) {
-                        return next(err);
-                    }
-                });
-
-                console.log(savedUser.indexes);
-
-                return res.json({
-                    code: 0,
-                    data: {
-                        total: savedUser.indexes[savedUser.indexes.length - 1]
-                    }
-                });
+        if (!user) {
+            user = new WxUserModel({
+                openId: req.query.wxOpenId,
             });
+            await user.save();
+        }
+
+        if (user.indexes && user.indexes.length >= 3) {
+            return res.json({
+                code: 0,
+                data: {
+                    total: user.indexes[2]
+                }
+            });
+        }
+        else {
+            user.indexes = user.indexes || [];
+
+            const counter = await CounterModel.findOneAndUpdate(
+                { seqName: 'StarIndex' },
+                { $inc: { seq: 1 } },
+                { upsert: true, new: true, setDefaultsOnInsert: true },
+            );
+
+            user.indexes = user.indexes.concat(+counter.seq);
+
+            const savedUser = await user.save({
+                validateBeforeSave: true
+            });
+
+            if (!savedUser) {
+                console.error('Save user failed, user indexes: ', user.indexes);
+                const error = new APIError('Save user failed');
+                return next(error);
+            }
+
+            console.log('Save user success, user indexes: ', savedUser.indexes);
+
+            return res.json({
+                code: 0,
+                data: {
+                    total: savedUser.indexes[savedUser.indexes.length - 1]
+                }
+            });
+        }
+    }
+    catch (err) {
+        console.error('Increase count failed,', err);
+        return next(err);
     }
 };
 
 export let upload = async (req, res, next) => {
-    let user = await WxUserModel.findOne({
-        openId: req.query.wxOpenId
-    });
 
-    if (!user) {
+    try {
+        const user = await WxUserModel.findOne({
+            openId: req.query.wxOpenId
+        });
+
+        if (!user) {
+            return res.json({
+                code: 404,
+                message: 'User not found'
+            });
+        }
+
+        user.name = req.body.name;
+        user.screenShotImg = await writeImageAsync(req.body.screenShotImg, req.query.wxOpenId);
+
+        if (!user.screenShotImg) {
+            console.error('writeImageAsync failed, userId:', user.userId);
+            return next('writeImageAsync failed');
+        }
+
+        await user.save();
+
         return res.json({
-            code: 404,
-            message: "user not found"
+            code: 0,
+            data: user
         });
     }
-
-    user.name = req.body.name;
-    user.screenShotImg = await writeImage(req.body.screenShotImg, req.query.wxOpenId);
-
-    await user.save();
-
-    return res.json({
-        code: 0,
-        data: user
-    });
+    catch (err) {
+        console.error('Upload image failed,', err);
+        return next(err);
+    }
 };
 
-function writeImage(dataUri: string, openId: string): Promise<string> {
+function writeImageAsync(dataUri: string, openId: string): Promise<string> {
     if (!dataUri) {
-        return;
+        return Promise.reject('writeImageAsync: image not provided.');
     }
 
     const base64String = dataUri.match(/data:(.*);base64,(.*)/)[2];
 
-    const avatar = Buffer.from(base64String, "base64");
+    const avatar = Buffer.from(base64String, 'base64');
     // const fileName = `/static/screenshots/${openId}-${+new Date()}.jpg`;
     const fileName = `/static/screenshots/${openId}-${+new Date()}.jpg`;
 
@@ -182,6 +194,7 @@ export let list = async (req, res, next) => {
             number2: indexes[1] || '',
             number3: indexes[2] || '',
             name: item.name,
+            createdAt: (item as any).createdAt,
             updatedAt: (item as any).updatedAt,
             screenShotImg: item.screenShotImg
         };
@@ -205,6 +218,7 @@ export let exportAll = async (req: Request, res: Response, next: NextFunction) =
             number2: indexes[1] || '',
             number3: indexes[2] || '',
             name: item.name,
+            createdAt: (item as any).createdAt,
             updatedAt: (item as any).updatedAt,
             screenShotImg: item.screenShotImg ? `http://h5crop.cdyjsw.cn${item.screenShotImg}` : ''
         };
@@ -222,7 +236,8 @@ function createExcel(items) {
     sheet.columns = [
         { header: 'No.', key: 'userId', width: 10 },
         { header: '姓名', key: 'name', width: 32 },
-        { header: '时间', key: 'updatedAt', width: 32 },
+        { header: '登录时间', key: 'createdAt', width: 32 },
+        { header: '上传时间', key: 'updatedAt', width: 32 },
         { header: '编号1', key: 'number1', width: 20, outlineLevel: 1 },
         { header: '编号2', key: 'number2', width: 20, outlineLevel: 1 },
         { header: '编号3', key: 'number3', width: 20, outlineLevel: 1 },

@@ -53,6 +53,10 @@ export class WxUser extends Typegoose {
     registeredAt?: Date;
     @prop()
     indexes?: Array<number>;
+
+    constructor() {
+        super();
+    }
 }
 
 const WxUserModel = new WxUser().getModelForClass(WxUser, {

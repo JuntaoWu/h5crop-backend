@@ -45,10 +45,16 @@
                 <td mat-cell *matCellDef="let element"> {{element.name}} </td>
             </ng-container>
 
+            <!-- createdAt Column -->
+            <ng-container matColumnDef="createdAt">
+                <th mat-header-cell *matHeaderCellDef> 登录时间 </th>
+                <td mat-cell *matCellDef="let element"> {{element.createdAt | date: 'yyyy-MM-dd HH:mm:ss'}} </td>
+            </ng-container>
+
             <!-- updatedAt Column -->
             <ng-container matColumnDef="updatedAt">
-                <th mat-header-cell *matHeaderCellDef> 时间 </th>
-                <td mat-cell *matCellDef="let element"> {{element.updatedAt | date}} </td>
+                <th mat-header-cell *matHeaderCellDef> 上传时间 </th>
+                <td mat-cell *matCellDef="let element"> {{element.updatedAt | date: 'yyyy-MM-dd HH:mm:ss'}} </td>
             </ng-container>
 
             <!-- number1 Column -->

@@ -11,7 +11,7 @@ import { FormControl } from '@angular/forms';
 export class AppComponent {
   title = 'h5cropadmin';
 
-  displayedColumns: string[] = ['userId', 'name', 'updatedAt', 'number1', 'number2', 'number3', 'screenShotImg'];
+  displayedColumns: string[] = ['userId', 'name', 'createdAt', 'updatedAt', 'number1', 'number2', 'number3', 'screenShotImg'];
   dataSource = new MatTableDataSource();
 
   pageIndex = 0;
