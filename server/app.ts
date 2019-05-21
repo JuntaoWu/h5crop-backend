@@ -35,6 +35,11 @@ app.use((passport).session());
 
 app.use('/api', indexRouter);
 app.use('/static', express.static(path.join(__dirname, '../../static')), cors());
+app.use('/admin', express.static(path.join(__dirname, '../client')), cors());
+
+app.get('/admin/*', (req, res, next) => {
+  return res.sendFile(path.join(__dirname, '../client/index.html'));
+});
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

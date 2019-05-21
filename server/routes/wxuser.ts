@@ -20,4 +20,7 @@ router.route('/increase')
 router.route('/upload')
     .post(wxuserCtrl.upload);
 
+router.route('/list')
+    .get(wxuserCtrl.list);
+
 export default router;
