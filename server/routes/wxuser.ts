@@ -23,4 +23,7 @@ router.route('/upload')
 router.route('/list')
     .get(wxuserCtrl.list);
 
+router.route('/exportAll')
+    .get(wxuserCtrl.exportAll);
+
 export default router;

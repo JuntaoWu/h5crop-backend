@@ -4,9 +4,11 @@ import { Request, Response, NextFunction } from "express";
 import APIError from "../helpers/APIError";
 import WxUserModel, { WxUser } from '../models/wxuser.model';
 import CounterModel from '../models/counter.model';
+import * as Excel from 'exceljs';
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { Stream } from 'stream';
 
 export let authorize = (req, res, next) => {
     const scope = 'snsapi_base';
@@ -83,12 +85,24 @@ export let increase = async (req, res, next) => {
 
                 console.log(user.indexes);
 
-                await user.save();
+                const savedUser = await user.save({
+                    validateBeforeSave: true
+                }, (err, doc) => {
+                    if (err) {
+                        return next(err);
+                    }
+                }).catch(err => {
+                    if (err) {
+                        return next(err);
+                    }
+                });
+
+                console.log(savedUser.indexes);
 
                 return res.json({
                     code: 0,
                     data: {
-                        total: user.indexes[user.indexes.length - 1]
+                        total: savedUser.indexes[savedUser.indexes.length - 1]
                     }
                 });
             });
@@ -142,17 +156,33 @@ function writeImage(dataUri: string, openId: string): Promise<string> {
 }
 
 export let list = async (req, res, next) => {
-    const { skip = 0, limit = 100 } = req.query;
-    const total = await WxUserModel.count({});
-    const data = await WxUserModel.find().skip(+skip).limit(+limit);
+    const { skip = 0, limit = 100, dateStart, dateEnd } = req.query;
+
+    const totalCondition: any = {};
+    if (dateStart && new Date(dateStart)) {
+        totalCondition.updatedAt = {
+            $gte: dateStart
+        };
+    }
+
+    if (dateEnd && new Date(dateEnd)) {
+        totalCondition.updatedAt = totalCondition.updatedAt || {
+
+        };
+        totalCondition.updatedAt.$lte = dateEnd;
+    }
+
+    const total = await WxUserModel.count(totalCondition);
+    const data = await WxUserModel.find(totalCondition).skip(+skip).limit(+limit);
     const items = data.map(item => {
         const indexes = item.indexes || [];
         return {
             userId: item.userId,
-            number1: indexes[0] || "",
-            number2: indexes[1] || "",
-            number3: indexes[2] || "",
+            number1: indexes[0] || '',
+            number2: indexes[1] || '',
+            number3: indexes[2] || '',
             name: item.name,
+            updatedAt: (item as any).updatedAt,
             screenShotImg: item.screenShotImg
         };
     });
@@ -165,4 +195,42 @@ export let list = async (req, res, next) => {
     });
 };
 
-export default { authorize, login, increase, upload, list };
+export let exportAll = async (req: Request, res: Response, next: NextFunction) => {
+    const data = await WxUserModel.find();
+    const items = data.map(item => {
+        const indexes = item.indexes || [];
+        return {
+            userId: item.userId,
+            number1: indexes[0] || '',
+            number2: indexes[1] || '',
+            number3: indexes[2] || '',
+            name: item.name,
+            updatedAt: (item as any).updatedAt,
+            screenShotImg: item.screenShotImg ? `http://h5crop.cdyjsw.cn${item.screenShotImg}` : ''
+        };
+    });
+
+    const workbook = createExcel(items);
+    res.setHeader('Content-Type', 'application/vnd.ms-excel;');
+    res.setHeader('Content-disposition', `attachment;filename=report.xlsx`);
+    workbook.xlsx.write(res);
+};
+
+function createExcel(items) {
+    const workbook = new Excel.Workbook();
+    const sheet = workbook.addWorksheet('Sheet1');
+    sheet.columns = [
+        { header: 'No.', key: 'userId', width: 10 },
+        { header: '姓名', key: 'name', width: 32 },
+        { header: '时间', key: 'updatedAt', width: 32 },
+        { header: '编号1', key: 'number1', width: 20, outlineLevel: 1 },
+        { header: '编号2', key: 'number2', width: 20, outlineLevel: 1 },
+        { header: '编号3', key: 'number3', width: 20, outlineLevel: 1 },
+        { header: '海报', key: 'screenShotImg', width: 50, outlineLevel: 1 },
+    ];
+
+    sheet.addRows(items);
+    return workbook;
+}
+
+export default { authorize, login, increase, upload, list, exportAll };

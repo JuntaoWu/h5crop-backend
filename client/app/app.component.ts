@@ -1,6 +1,7 @@
 import { Component, ViewChild } from '@angular/core';
 import { MatTableDataSource, MatPaginator, PageEvent } from '@angular/material';
 import { AppService } from './app.service';
+import { FormControl } from '@angular/forms';
 
 @Component({
   selector: 'app-root',
@@ -10,19 +11,23 @@ import { AppService } from './app.service';
 export class AppComponent {
   title = 'h5cropadmin';
 
-  displayedColumns: string[] = ['userId', 'name', 'number1', 'number2', 'number3', 'screenShotImg'];
+  displayedColumns: string[] = ['userId', 'name', 'updatedAt', 'number1', 'number2', 'number3', 'screenShotImg'];
   dataSource = new MatTableDataSource();
 
   pageIndex = 0;
   pageSize = 100;
   pageSizeOptions = [25, 50, 100];
 
+  public dateStart: FormControl;
+  public dateEnd: FormControl;
+
   total = 0;
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
 
   constructor(private service: AppService) {
-
+    this.dateStart = new FormControl("");
+    this.dateEnd = new FormControl(new Date());
   }
 
   async ngOnInit() {
@@ -34,7 +39,7 @@ export class AppComponent {
   }
 
   getPage() {
-    this.service.list((this.pageIndex) * this.pageSize, this.pageSize).subscribe(data => {
+    this.service.list((this.pageIndex) * this.pageSize, this.pageSize, this.dateStart.value, this.dateEnd.value).subscribe(data => {
       this.dataSource = data.items;
       this.total = data.total;
     });
@@ -45,5 +50,18 @@ export class AppComponent {
     this.pageSize = $event.pageSize;
 
     this.getPage();
+  }
+
+  exportAll() {
+    location.href = '/api/wxuser/exportAll';
+  }
+
+  search() {
+    this.getPage();
+  }
+
+  reset() {
+    this.dateStart.reset();
+    this.dateEnd.reset();
   }
 }

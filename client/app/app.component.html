@@ -1,10 +1,36 @@
 <div style="position: fixed; top: 0; width: 100%">
-    <mat-toolbar>
-        <button mat-button>导出</button>
+    <mat-toolbar class="toolbar">
+        <div class="filter">
+            <span>Total: {{total}}</span>
+            <mat-divider [vertical]="true" class="divider"></mat-divider>
+            <form matForm (ngSubmit)="search()">
+                <md2-datepicker type="datetime" #pickerStart [formControl]="dateStart"></md2-datepicker>
+                <md2-datepicker type="datetime" #pickerEnd [formControl]="dateEnd"></md2-datepicker>
+                <!-- <mat-form-field floatLabel="never">
+                    <md2-datepicker #pickerStart [formControl]="dateStart"></md2-datepicker>
+                </mat-form-field> -->
+
+                <!-- <mat-form-field floatLabel="never">
+                    <md2-datepicker #pickerStart></md2-datepicker>
+                    <button [md2DatepickerToggle]="pickerStart"></button>
+                    <input [formControl]="dateStart" matInput placeholder="选择起始日期">
+                    <mat-datepicker-toggle matSuffix [for]="pickerStart"></mat-datepicker-toggle>
+                    <mat-datepicker #pickerStart></mat-datepicker>
+                </mat-form-field> -->
+                <!-- <mat-form-field floatLabel="never">
+                    <input [formControl]="dateEnd" matInput [matDatepicker]="pickerEnd" placeholder="选择结束日期">
+                    <mat-datepicker-toggle matSuffix [for]="pickerEnd"></mat-datepicker-toggle>
+                    <mat-datepicker #pickerEnd></mat-datepicker>
+                </mat-form-field> -->
+                <button type="submit" mat-raised-button>筛选</button>
+                <button type="reset" mat-raised-button color="warn" (click)="reset()">重置</button>
+            </form>
+        </div>
+        <button mat-raised-button color="primary" (click)="exportAll()">导出</button>
     </mat-toolbar>
 </div>
 <div style="position: absolute; width: 100%; top: 80px;">
-    <div class="mat-elevation-z8">
+    <div class="mat-elevation-z8 container">
         <table mat-table [dataSource]="dataSource">
 
             <!-- userId Column -->
@@ -17,6 +43,12 @@
             <ng-container matColumnDef="name">
                 <th mat-header-cell *matHeaderCellDef> 姓名 </th>
                 <td mat-cell *matCellDef="let element"> {{element.name}} </td>
+            </ng-container>
+
+            <!-- updatedAt Column -->
+            <ng-container matColumnDef="updatedAt">
+                <th mat-header-cell *matHeaderCellDef> 时间 </th>
+                <td mat-cell *matCellDef="let element"> {{element.updatedAt | date}} </td>
             </ng-container>
 
             <!-- number1 Column -->
@@ -46,7 +78,7 @@
             <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
         </table>
 
-        <mat-paginator showFirstLastButtons="true" [length]="total" [pageSize]="pageSize" [pageSizeOptions]="pageSizeOptions" (page)="refreshPage($event)">
+        <mat-paginator class="mat-paginator-sticky" showFirstLastButtons="true" [length]="total" [pageSize]="pageSize" [pageSizeOptions]="pageSizeOptions" (page)="refreshPage($event)">
         </mat-paginator>
     </div>
 </div>

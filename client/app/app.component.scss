@@ -1,3 +1,40 @@
+.toolbar {
+    justify-content: space-between;
+}
+
 table {
     width: 100%;
+}
+
+.mat-form-field {
+    font-size: smaller;
+}
+
+.filter {
+    display: flex;
+    justify-content: space-around;
+    align-items: baseline;
+}
+
+form {
+    width: 620px;
+    display: flex;
+    justify-content: space-around;
+    align-items: baseline;
+}
+
+.divider {
+    width: 20px;
+}
+
+.container {
+    height: calc(100vh - 100px);
+    width: calc(100vw - 15px);
+    overflow: auto;
+}
+
+.mat-paginator-sticky {
+    bottom: 0px;
+    position: sticky;
+    z-index: 10;
 }

@@ -10,8 +10,8 @@ export class AppService {
 
   constructor(private http: HttpClient) { }
 
-  list(skip: number = 0, limit: number = 100) {
-    return this.http.get(`/api/wxuser/list?skip=${skip}&limit=${limit}`).pipe(
+  list(skip: number = 0, limit: number = 100, dateStart: Date = null, dateEnd: Date = null) {
+    return this.http.get(`/api/wxuser/list?skip=${skip}&limit=${limit}&dateStart=${dateStart && dateStart.toJSON() || ''}&dateEnd=${dateEnd && dateEnd.toJSON() || ''}`).pipe(
       map((res: any) => {
         if (res.code !== 0) {
           return throwError(res && res.message || '获取数据失败');

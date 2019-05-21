@@ -1,11 +1,18 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { MatTableModule, MatPaginatorModule, MatButtonModule, MatToolbarModule } from '@angular/material';
+import {
+  MatTableModule, MatPaginatorModule, MatButtonModule, MatToolbarModule, MatDatepickerModule, MatNativeDateModule,
+  MatFormFieldModule,
+  MatInputModule,
+  MatDividerModule
+} from '@angular/material';
+import { Md2DatepickerModule, MdNativeDateModule } from 'md2';
 
 import { AppComponent } from './app.component';
 import { HttpClientModule } from '@angular/common/http';
 import { AppService } from './app.service';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [
@@ -18,7 +25,16 @@ import { AppService } from './app.service';
     MatPaginatorModule,
     MatButtonModule,
     MatToolbarModule,
-    HttpClientModule
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatInputModule,
+    MatFormFieldModule,
+    MatDividerModule,
+    HttpClientModule,
+    FormsModule,
+    ReactiveFormsModule,
+    Md2DatepickerModule,
+    MdNativeDateModule,
   ],
   providers: [
     AppService,
