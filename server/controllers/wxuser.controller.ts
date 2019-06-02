@@ -132,7 +132,7 @@ export let upload = async (req, res, next) => {
         if (req.body.avatarImg) {
             user.avatarUrl = await writeImageAsync(req.body.avatarImg, req.query.wxOpenId, 'avatar');
             if (!req.body.screenShotImg) {
-                user.screenShotImg = await retakeScreenshot(req.query.wxOpenId);
+                user.screenShotImg = await retakeScreenshot(req.query.wxOpenId, user.avatarUrl.toString());
             }
         }
 
@@ -178,7 +178,7 @@ function writeImageAsync(dataUri: string, openId: string, type: string): Promise
 }
 
 export let list = async (req, res, next) => {
-    const { skip = 0, limit = 100, dateStart, dateEnd } = req.query;
+    const { skip = 0, limit = 100, dateStart, dateEnd, filter = '' } = req.query;
 
     const totalCondition: any = {};
     if (dateStart && new Date(dateStart)) {
@@ -188,10 +188,12 @@ export let list = async (req, res, next) => {
     }
 
     if (dateEnd && new Date(dateEnd)) {
-        totalCondition.updatedAt = totalCondition.updatedAt || {
-
-        };
+        totalCondition.updatedAt = totalCondition.updatedAt || {};
         totalCondition.updatedAt.$lte = dateEnd;
+    }
+
+    if (filter) {
+        totalCondition.name = { $regex: '^' + filter };
     }
 
     const total = await WxUserModel.count(totalCondition);
@@ -199,6 +201,7 @@ export let list = async (req, res, next) => {
     const items = data.map(item => {
         const indexes = item.indexes || [];
         return {
+            openId: item.openId,
             userId: item.userId,
             number1: indexes[0] || '',
             number2: indexes[1] || '',
@@ -206,7 +209,8 @@ export let list = async (req, res, next) => {
             name: item.name,
             createdAt: (item as any).createdAt,
             updatedAt: (item as any).updatedAt,
-            screenShotImg: item.screenShotImg
+            screenShotImg: item.screenShotImg,
+            avatarUrl: item.avatarUrl,
         };
     });
     return res.json({
@@ -265,11 +269,11 @@ export let screenshotSSR = async (req, res, next) => {
     return res.render('screenshotSSR', {
         name: user.name,
         index: user.indexes.length > 0 && user.indexes[user.indexes.length - 1] || 0,
-        avatarUrl: user.avatarUrl || ''
+        avatarUrl: req.query.avatarUrl || user.avatarUrl || ''
     });
 };
 
-async function retakeScreenshot(openId: string): Promise<any> {
+async function retakeScreenshot(openId: string, avatarUrl?: string): Promise<any> {
     const filename = `/static/screenshots/${openId}-${+new Date()}.jpg`;
     const filepath = path.join(__dirname, `../../..${filename}`);
     const nightmare = new Nightmare({
@@ -278,7 +282,7 @@ async function retakeScreenshot(openId: string): Promise<any> {
         },
         waitTimeout: 1000
     }); // Create the Nightmare instance.
-    const url = `http://localhost:8125/api/wxuser/screenshotSSR?wxOpenId=${openId}`;
+    const url = `http://localhost:8125/api/wxuser/screenshotSSR?wxOpenId=${openId}&avatarUrl=${avatarUrl || ''}`;
 
     return new Promise((resolve, reject) => {
         return nightmare
@@ -307,8 +311,12 @@ export let takeScreenshot = async (req, res, next) => {
     }
 
     const filename = await retakeScreenshot(req.query.wxOpenId);
-    const filepath = path.join(__dirname, `../../..${filename}`);
-    return res.sendFile(filepath);
+    return res.json({
+        code: 0,
+        data: filename,
+    });
+    // const filepath = path.join(__dirname, `../../..${filename}`);
+    // return res.sendFile(filepath);
     // spawn Electron
     // const child = proc.spawn(electron as any);
 

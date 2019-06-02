@@ -1,7 +1,9 @@
-import { Component, ViewChild } from '@angular/core';
-import { MatTableDataSource, MatPaginator, PageEvent } from '@angular/material';
+import { Component, ViewChild, ElementRef, ViewChildren, QueryList } from '@angular/core';
+import { MatTableDataSource, MatPaginator, PageEvent, MatInput } from '@angular/material';
 import { AppService } from './app.service';
 import { FormControl } from '@angular/forms';
+import { fromEvent, Subject, Observable } from 'rxjs';
+import { map, filter, debounceTime, distinctUntilChanged, switchMap, switchMapTo } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
@@ -9,19 +11,27 @@ import { FormControl } from '@angular/forms';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  title = 'h5cropadmin';
+  public title = 'h5crop-admin';
 
-  displayedColumns: string[] = ['userId', 'name', 'createdAt', 'updatedAt', 'number1', 'number2', 'number3', 'avatarUrl', 'screenShotImg', 'operation'];
-  dataSource = new MatTableDataSource();
+  public displayedColumns: string[] = ['userId', 'name', 'createdAt', 'updatedAt', 'number1', 'number2', 'number3',
+    'avatarUrl', 'screenShotImg', 'operation'];
+  public dataSource = [];
 
-  pageIndex = 0;
-  pageSize = 100;
-  pageSizeOptions = [25, 50, 100];
+  public pageIndex = 0;
+  public pageSize = 100;
+  public pageSizeOptions = [25, 50, 100];
 
   public dateStart: FormControl;
   public dateEnd: FormControl;
+  public userName = '';
 
-  total = 0;
+  public userNameSubject = new Subject<string>();
+
+  public total = 0;
+
+  public standaloneOptions = {
+    standalone: true
+  };
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
 
@@ -30,7 +40,33 @@ export class AppComponent {
     this.dateEnd = new FormControl(new Date());
   }
 
+  ngAfterViewInit() {
+    const _this = this;
+    const typeahead = this.userNameSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(() => {
+        // if (this.userName && this.dataSource && this.dataSource.length) {
+        //   const items = this.dataSource.filter(item => item.name && item.name.startsWith(this.userName)
+        //   );
+        //   return Observable.of({
+        //     items,
+        //     total: items.length,
+        //   });
+        // }
+        return this.service.list((this.pageIndex) * this.pageSize, this.pageSize, this.dateStart.value, this.dateEnd.value, this.userName);
+      })
+    );
+
+    typeahead.subscribe(data => {
+      // Handle the data from the API
+      this.dataSource = data.items;
+      this.total = data.total;
+    });
+  }
+
   async ngOnInit() {
+
 
     this.getPage();
 
@@ -63,5 +99,33 @@ export class AppComponent {
   reset() {
     this.dateStart.reset();
     this.dateEnd.reset();
+  }
+
+  selectFile(event: Event, user) {
+    console.log('select file triggered.', event, user);
+    var input = event.target as HTMLInputElement;
+
+    var reader = new FileReader();
+    reader.onload = () => {
+      const dataURL = reader.result;
+      this.service.upload(user, dataURL).subscribe((data) => {
+        user.avatarUrl = data.avatarUrl;
+        user.screenShotImg = data.screenShotImg;
+      }, err => {
+        alert('Upload File failed.');
+      });
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+
+  takeScreenshot(user) {
+    this.service.takeScreenshot(user).subscribe(data => {
+      user.screenShotImg = data;
+    });
+  }
+
+  filter(userName) {
+    console.log(userName);
+    this.userNameSubject.next(userName);
   }
 }

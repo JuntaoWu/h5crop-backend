@@ -10,8 +10,8 @@ export class AppService {
 
   constructor(private http: HttpClient) { }
 
-  list(skip: number = 0, limit: number = 100, dateStart: Date = null, dateEnd: Date = null) {
-    return this.http.get(`/api/wxuser/list?skip=${skip}&limit=${limit}&dateStart=${dateStart && dateStart.toJSON() || ''}&dateEnd=${dateEnd && dateEnd.toJSON() || ''}`).pipe(
+  list(skip: number = 0, limit: number = 100, dateStart: Date = null, dateEnd: Date = null, filter: string = null) {
+    return this.http.get(`/api/wxuser/list?skip=${skip}&limit=${limit}&dateStart=${dateStart && dateStart.toJSON() || ''}&dateEnd=${dateEnd && dateEnd.toJSON() || ''}&filter=${filter || ''}`).pipe(
       map((res: any) => {
         if (res.code !== 0) {
           return throwError(res && res.message || '获取数据失败');
@@ -21,6 +21,39 @@ export class AppService {
       catchError((error) => {
         console.error(error);
         return of([]);
+      })
+    );
+  }
+
+  upload(user, dataURL) {
+    return this.http.post(`/api/wxuser/upload?wxOpenId=${user.openId}`, {
+      name: user.name,
+      avatarImg: dataURL,
+    }).pipe(
+      map((res: any) => {
+        if (res.code !== 0) {
+          return throwError(res && res.message || '获取数据失败');
+        }
+        return res.data;
+      }),
+      catchError((error) => {
+        console.error(error);
+        return of();
+      })
+    );
+  }
+
+  takeScreenshot(user) {
+    return this.http.get(`/api/wxuser/retakeScreenshot?wxOpenId=${user.openId}`).pipe(
+      map((res: any) => {
+        if (res.code !== 0) {
+          return throwError(res && res.message || '获取数据失败');
+        }
+        return res.data;
+      }),
+      catchError((error) => {
+        console.error(error);
+        return of();
       })
     );
   }

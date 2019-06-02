@@ -5,7 +5,8 @@ import {
   MatTableModule, MatPaginatorModule, MatButtonModule, MatToolbarModule, MatDatepickerModule, MatNativeDateModule,
   MatFormFieldModule,
   MatInputModule,
-  MatDividerModule
+  MatDividerModule,
+  MatIconModule
 } from '@angular/material';
 import { Md2DatepickerModule, MdNativeDateModule } from 'md2';
 
@@ -30,6 +31,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
     MatInputModule,
     MatFormFieldModule,
     MatDividerModule,
+    MatIconModule,
     HttpClientModule,
     FormsModule,
     ReactiveFormsModule,
