@@ -97,7 +97,8 @@
                     <button *ngIf="!!element.name" mat-raised-button class="file-upload">
                         <input style="opacity: 0;" type="file" (change)="selectFile($event, element)" />
                         重传头像</button>
-                    <button *ngIf="!!element.avatarUrl" mat-raised-button (click)="takeScreenshot(element)">重新截图</button></td>
+                    <button *ngIf="!!element.avatarUrl" mat-raised-button (click)="takeScreenshot(element)">重新截图</button>
+                </td>
             </ng-container>
 
             <tr mat-header-row *matHeaderRowDef="displayedColumns, sticky: true"></tr>

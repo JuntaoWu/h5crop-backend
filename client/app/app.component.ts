@@ -111,6 +111,7 @@ export class AppComponent {
       this.service.upload(user, dataURL).subscribe((data) => {
         user.avatarUrl = data.avatarUrl;
         user.screenShotImg = data.screenShotImg;
+        alert('重传头像并截图成功');
       }, err => {
         alert('Upload File failed.');
       });
@@ -121,6 +122,9 @@ export class AppComponent {
   takeScreenshot(user) {
     this.service.takeScreenshot(user).subscribe(data => {
       user.screenShotImg = data;
+      alert('重新截图成功');
+    }, err => {
+      alert('TakeScreenshot failed.');
     });
   }
 

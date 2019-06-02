@@ -44,7 +44,7 @@ export class AppService {
   }
 
   takeScreenshot(user) {
-    return this.http.get(`/api/wxuser/retakeScreenshot?wxOpenId=${user.openId}`).pipe(
+    return this.http.get(`/api/wxuser/takeScreenshot?wxOpenId=${user.openId}`).pipe(
       map((res: any) => {
         if (res.code !== 0) {
           return throwError(res && res.message || '获取数据失败');

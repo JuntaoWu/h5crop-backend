@@ -132,7 +132,9 @@ export let upload = async (req, res, next) => {
         if (req.body.avatarImg) {
             user.avatarUrl = await writeImageAsync(req.body.avatarImg, req.query.wxOpenId, 'avatar');
             if (!req.body.screenShotImg) {
-                user.screenShotImg = await retakeScreenshot(req.query.wxOpenId, user.avatarUrl.toString());
+                user.screenShotImg = await retakeScreenshot(req.query.wxOpenId, user.avatarUrl.toString()).catch(error => {
+                    return next(error);
+                });
             }
         }
 
@@ -276,24 +278,27 @@ export let screenshotSSR = async (req, res, next) => {
 async function retakeScreenshot(openId: string, avatarUrl?: string): Promise<any> {
     const filename = `/static/screenshots/${openId}-${+new Date()}.jpg`;
     const filepath = path.join(__dirname, `../../..${filename}`);
+    console.log(filename);
     const nightmare = new Nightmare({
         webPreferences: {
             useContentSize: true,
-        },
-        waitTimeout: 1000
+        }
     }); // Create the Nightmare instance.
     const url = `http://localhost:8125/api/wxuser/screenshotSSR?wxOpenId=${openId}&avatarUrl=${avatarUrl || ''}`;
 
     return new Promise((resolve, reject) => {
         return nightmare
-            .viewport(375, 667)
+            .viewport(640, 1136)
             .goto(url) // Point the browser at the web server we just started.
-            .wait('img') // Wait until the chart appears on screen.
+            .wait(3000) // Wait until the chart appears on screen.
             .screenshot(filepath) // Capture a screenshot to an image file.
             .end() // End the Nightmare session. Any queued operations are completed and the headless browser is terminated.
             .then(() => {
                 console.log('we are done.');
                 return resolve(filename);
+            }, (error) => {
+                console.error(error);
+                return reject(error);
             }); // return when we are done.
     });
 }
@@ -310,7 +315,15 @@ export let takeScreenshot = async (req, res, next) => {
         });
     }
 
-    const filename = await retakeScreenshot(req.query.wxOpenId);
+    const filename = await retakeScreenshot(req.query.wxOpenId).catch(error => {
+        return next(error);
+    });
+
+    if (filename) {
+        user.screenShotImg = filename;
+        await user.save();
+    }
+
     return res.json({
         code: 0,
         data: filename,
