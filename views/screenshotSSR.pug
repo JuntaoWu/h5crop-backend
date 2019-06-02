@@ -1,0 +1,51 @@
+extends layout
+
+block content
+    #app
+      #main
+        img.bg.unselectable(src='/images/bg.jpg')
+        .abs(style='width: 100%; height: 100%; top: 0px;')
+          img.unselectable(src='/images/H5GIF.gif')
+        #shotBox.content.abs.fle(style='padding-top: 10px;')
+          .abs(style='width: 100%; height: 100%; top: 0px;')
+            img.unselectable(src='/images/bg.jpg')
+          .abs(style='width: 100%; height: 100%; top: 0px;')
+            img.unselectable(src='/images/H5GIF.gif')
+          .cont-head.rel.fle.something
+            .head-img
+              img.unselectable(src='/images/head.png')
+            .abs(style='top: 0; left: 20px; width: 20%;')
+              img.unselectable(src='/images/head_left.png')
+            .abs(style='top: 0; right: 20px; width: 10%;')
+              img.unselectable(src='/images/head_right.png')
+          .cont-main.rel.fle
+            .content-item
+              .upload-img-bg.rel
+                .upload-img.abs
+                  img.preview(src=(avatarUrl || ''))
+                img.unselectable(src='/images/file_border.png')
+            .input-box
+              | 我是
+              .rel(style='display: inline-block; margin: 0 3px;')
+                span.data-bg(style='margin: 0 5px;') #{name}
+              |                         第
+              span.data-bg(style='margin: 0 3px;') #{index}
+              |  位金星追梦者
+            .content-item.fle
+              .content-img
+                img.unselectable(src='/images/content_img1.png')
+            .content-item.fle
+              .content-img
+                img.unselectable(src='/images/content_img2.png')
+            .content-item.fle
+              .content-img
+                img.unselectable(src='/images/content_img3.png')
+          .cont-foot.rel.fle
+            .qrcode-box
+              #qrcode
+              .qrcode.abs
+                img.unselectable(style='width: 50px; height: 50px; margin: 2px;', src='/images/qrcode.png')
+              .qrcode-tip.abs
+                img.unselectable(src='/images/qrcode_tip.png')
+              .qrcode-right.abs
+                img.unselectable(src='/images/foot.png')

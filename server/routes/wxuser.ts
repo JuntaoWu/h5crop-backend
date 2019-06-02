@@ -26,4 +26,10 @@ router.route('/list')
 router.route('/exportAll')
     .get(wxuserCtrl.exportAll);
 
+router.route('/screenshotSSR')
+    .get(wxuserCtrl.screenshotSSR);
+
+router.route('/takeScreenshot')
+    .get(wxuserCtrl.takeScreenshot);
+
 export default router;

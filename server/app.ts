@@ -34,6 +34,7 @@ app.use((passport).initialize());
 app.use((passport).session());
 
 app.use('/api', indexRouter);
+app.use('/', express.static(path.join(__dirname, '../../public')), cors());
 app.use('/static', express.static(path.join(__dirname, '../../static')), cors());
 app.use('/admin', express.static(path.join(__dirname, '../client')), cors());
 

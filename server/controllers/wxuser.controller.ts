@@ -8,7 +8,8 @@ import * as Excel from 'exceljs';
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { Stream } from 'stream';
+
+import * as Nightmare from 'nightmare';
 
 export let authorize = (req, res, next) => {
     const scope = 'snsapi_base';
@@ -124,7 +125,16 @@ export let upload = async (req, res, next) => {
         }
 
         user.name = req.body.name;
-        user.screenShotImg = await writeImageAsync(req.body.screenShotImg, req.query.wxOpenId);
+        if (req.body.screenShotImg) {
+            user.screenShotImg = await writeImageAsync(req.body.screenShotImg, req.query.wxOpenId, 'screenshots');
+        }
+
+        if (req.body.avatarImg) {
+            user.avatarUrl = await writeImageAsync(req.body.avatarImg, req.query.wxOpenId, 'avatar');
+            if (!req.body.screenShotImg) {
+                user.screenShotImg = await retakeScreenshot(req.query.wxOpenId);
+            }
+        }
 
         if (!user.screenShotImg) {
             console.error('writeImageAsync failed, userId:', user.userId);
@@ -144,7 +154,7 @@ export let upload = async (req, res, next) => {
     }
 };
 
-function writeImageAsync(dataUri: string, openId: string): Promise<string> {
+function writeImageAsync(dataUri: string, openId: string, type: string): Promise<string> {
     if (!dataUri) {
         return Promise.reject('writeImageAsync: image not provided.');
     }
@@ -153,7 +163,7 @@ function writeImageAsync(dataUri: string, openId: string): Promise<string> {
 
     const avatar = Buffer.from(base64String, 'base64');
     // const fileName = `/static/screenshots/${openId}-${+new Date()}.jpg`;
-    const fileName = `/static/screenshots/${openId}-${+new Date()}.jpg`;
+    const fileName = `/static/${type}/${openId}-${+new Date()}.jpg`;
 
     return new Promise((resolve, reject) => {
         fs.writeFile(path.join(__dirname, `../../..${fileName}`), avatar, (err) => {
@@ -248,4 +258,78 @@ function createExcel(items) {
     return workbook;
 }
 
-export default { authorize, login, increase, upload, list, exportAll };
+export let screenshotSSR = async (req, res, next) => {
+    const user = await WxUserModel.findOne({
+        openId: req.query.wxOpenId
+    });
+    return res.render('screenshotSSR', {
+        name: user.name,
+        index: user.indexes.length > 0 && user.indexes[user.indexes.length - 1] || 0,
+        avatarUrl: user.avatarUrl || ''
+    });
+};
+
+async function retakeScreenshot(openId: string): Promise<any> {
+    const filename = `/static/screenshots/${openId}-${+new Date()}.jpg`;
+    const filepath = path.join(__dirname, `../../..${filename}`);
+    const nightmare = new Nightmare({
+        webPreferences: {
+            useContentSize: true,
+        },
+        waitTimeout: 1000
+    }); // Create the Nightmare instance.
+    const url = `http://localhost:8125/api/wxuser/screenshotSSR?wxOpenId=${openId}`;
+
+    return new Promise((resolve, reject) => {
+        return nightmare
+            .viewport(375, 667)
+            .goto(url) // Point the browser at the web server we just started.
+            .wait('img') // Wait until the chart appears on screen.
+            .screenshot(filepath) // Capture a screenshot to an image file.
+            .end() // End the Nightmare session. Any queued operations are completed and the headless browser is terminated.
+            .then(() => {
+                console.log('we are done.');
+                return resolve(filename);
+            }); // return when we are done.
+    });
+}
+
+export let takeScreenshot = async (req, res, next) => {
+    const user = await WxUserModel.findOne({
+        openId: req.query.wxOpenId
+    });
+
+    if (!user) {
+        return res.json({
+            code: 404,
+            message: 'User not found'
+        });
+    }
+
+    const filename = await retakeScreenshot(req.query.wxOpenId);
+    const filepath = path.join(__dirname, `../../..${filename}`);
+    return res.sendFile(filepath);
+    // spawn Electron
+    // const child = proc.spawn(electron as any);
+
+    // child.on('ready', () => {
+    //     screenshot(
+    //         {
+    //             url: `http://localhost:8125/api/wxuser/screenshotSSR?wxOpenId=oA2BE1HqQQb85gdSwtQbgVA6TQao`,
+    //             width: 640,
+    //             height: 1080
+    //         },
+    //         (err, image) => {
+    //             // image.data is a Node Buffer
+    //             // image.size contains width and height
+    //             // image.devicePixelRatio will contain window.devicePixelRatio
+    //             const stream = new PassThrough();
+    //             stream.end(image.data);
+
+    //             return stream.pipe(res);
+    //             // image.data.pipe(res);
+    //         });
+    // });
+};
+
+export default { authorize, login, increase, upload, list, exportAll, screenshotSSR, takeScreenshot };
