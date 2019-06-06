@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { FormControl } from '@angular/forms';
 import { fromEvent, Subject, Observable } from 'rxjs';
 import { map, filter, debounceTime, distinctUntilChanged, switchMap, switchMapTo } from 'rxjs/operators';
+import { UploadOptions } from './upload-options.enum';
 
 @Component({
   selector: 'app-root',
@@ -11,6 +12,8 @@ import { map, filter, debounceTime, distinctUntilChanged, switchMap, switchMapTo
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
+
+  public UploadOptions = UploadOptions;
   public title = 'h5crop-admin';
 
   public displayedColumns: string[] = ['userId', 'name', 'createdAt', 'updatedAt', 'number1', 'number2', 'number3',
@@ -76,7 +79,12 @@ export class AppComponent {
 
   getPage() {
     this.service.list((this.pageIndex) * this.pageSize, this.pageSize, this.dateStart.value, this.dateEnd.value).subscribe(data => {
-      this.dataSource = data.items;
+      this.dataSource = data.items.map(i => {
+        return {
+          ...i,
+          ssrUrl: `/api/wxuser/screenshotSSR?wxOpenId=${i.openId}`
+        };
+      });
       this.total = data.total;
     });
   }
@@ -101,17 +109,17 @@ export class AppComponent {
     this.dateEnd.reset();
   }
 
-  selectFile(event: Event, user) {
+  selectFile(event: Event, user, uploadOption: UploadOptions) {
     console.log('select file triggered.', event, user);
     var input = event.target as HTMLInputElement;
 
     var reader = new FileReader();
     reader.onload = () => {
       const dataURL = reader.result;
-      this.service.upload(user, dataURL).subscribe((data) => {
+      this.service.upload(user, dataURL, uploadOption).subscribe((data) => {
         user.avatarUrl = data.avatarUrl;
         user.screenShotImg = data.screenShotImg;
-        alert('重传头像并截图成功');
+        alert('重传成功');
       }, err => {
         alert('Upload File failed.');
       });
