@@ -17,7 +17,7 @@ export class AppComponent {
   public title = 'h5crop-admin';
 
   public displayedColumns: string[] = ['userId', 'name', 'createdAt', 'updatedAt', 'number1', 'number2', 'number3',
-    'avatarUrl', 'screenShotImg', 'operation'];
+    'screenShotImg', 'operation'];
   public dataSource = [];
 
   public pageIndex = 0;
@@ -63,7 +63,12 @@ export class AppComponent {
 
     typeahead.subscribe(data => {
       // Handle the data from the API
-      this.dataSource = data.items;
+      this.dataSource = data.items.map(i => {
+        return {
+          ...i,
+          ssrUrl: `/api/wxuser/screenshotSSR?wxOpenId=${i.openId}`
+        };
+      });
       this.total = data.total;
     });
   }
