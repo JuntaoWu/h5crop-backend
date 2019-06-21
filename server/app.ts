@@ -35,7 +35,7 @@ app.use((passport).session());
 
 app.use('/api', indexRouter);
 app.use('/', express.static(path.join(__dirname, '../../public')), cors());
-app.use('/static', express.static(path.join(__dirname, '../../static')), cors());
+app.use('/static', express.static('/data0/www/cn.cdyjsw.h5crop.backend/static'), cors());
 app.use('/admin', express.static(path.join(__dirname, '../client')), cors());
 
 app.get('/admin/*', (req, res, next) => {

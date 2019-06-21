@@ -168,7 +168,7 @@ function writeImageAsync(dataUri: string, openId: string, type: string): Promise
     const fileName = `/static/${type}/${openId}-${+new Date()}.jpg`;
 
     return new Promise((resolve, reject) => {
-        fs.writeFile(path.join(__dirname, `../../..${fileName}`), avatar, (err) => {
+        fs.writeFile(`/data0/www/cn.cdyjsw.h5crop.backend${fileName}`, avatar, (err) => {
             if (err) {
                 return reject(err);
             }
@@ -277,7 +277,7 @@ export let screenshotSSR = async (req, res, next) => {
 
 async function retakeScreenshot(openId: string, avatarUrl?: string): Promise<any> {
     const filename = `/static/screenshots/${openId}-${+new Date()}.jpg`;
-    const filepath = path.join(__dirname, `../../..${filename}`);
+    const filepath = `/data0/www/cn.cdyjsw.h5crop.backend${filename}`;
     console.log(filename);
     const nightmare = new Nightmare({
         webPreferences: {
@@ -328,7 +328,7 @@ export let takeScreenshot = async (req, res, next) => {
         code: 0,
         data: filename,
     });
-    // const filepath = path.join(__dirname, `../../..${filename}`);
+    // const filepath = `/data0/www/cn.cdyjsw.h5crop.backend${filename}`;
     // return res.sendFile(filepath);
     // spawn Electron
     // const child = proc.spawn(electron as any);
