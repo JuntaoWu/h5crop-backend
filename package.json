@@ -44,7 +44,7 @@
         "lodash": "^4.17.11",
         "lusca": "^1.5.2",
         "moment": "^2.24.0",
-        "mongoose": "^5.4.19",
+        "mongoose": "^5.7.5",
         "morgan": "^1.9.1",
         "nightmare": "^3.0.2",
         "nodemailer": "^4.7.0",
