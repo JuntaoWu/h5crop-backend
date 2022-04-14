@@ -18,7 +18,7 @@
         "sme": "./node_modules/.bin/source-map-explorer"
     },
     "dependencies": {
-        "async": "^2.6.2",
+        "async": "^3.2.2",
         "bcrypt-nodejs": "^0.0.3",
         "bluebird": "^3.5.3",
         "body-parser": "^1.18.2",
